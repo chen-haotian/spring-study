@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 依赖注入方式一：构造注入 -->
+    <bean id="helloWorld" class="com.matrix.study.demo2.hello.HelloWorld">
+        <!--
+        constructor-arg标签：用于构造注入参数
+            index属性：指定参数在构造函数参数列表的索引位置
+            type属性：指定参数在构造函数中的数据类型
+            name属性：指定参数在构造函数中的名称
+        =======上面三个都是找给谁赋值，下面两个指的是赋什么值的==============
+            value属性：它能赋的值是基本数据类型和 String 类型
+            ref属性：它能赋的值是其他 bean 类型，也就是说，必须得是在配置文件中配置过的 bean
+        -->
+        <property name="name" value="Matrix"/>
+        <property name="age" value="23"/>
+        <property name="date" ref="date"/>
+
+        <!-- 数组类型-->
+        <property name="stringArray">
+            <!-- array标签：表示数组 -->
+            <array>
+                <value>A</value>
+                <value>B</value>
+                <value>C</value>
+            </array>
+        </property>
+        <!-- 集合类型 -->
+        <property name="stringList">
+            <!-- list标签：表示集合 -->
+            <list>
+                <value>D</value>
+                <value>E</value>
+                <value>F</value>
+            </list>
+        </property>
+
+        <!-- map类型 -->
+        <property name="stringMap">
+            <!-- map标签：表示map类型的数据结构kv -->
+            <map>
+                <entry key="Matrix" value="QiQi"/>
+            </map>
+
+<!--            <props>-->
+<!--                <prop key="matrix">qiqi</prop>-->
+<!--            </props>-->
+        </property>
+
+        <!-- set类型 -->
+        <property name="stringSet">
+            <!-- set标签：表示set类型的数据结构 -->
+            <set>
+                <value>G</value>
+                <value>G</value>
+                <value>P</value>
+            </set>
+        </property>
+
+        <property name="properties">
+            <!-- props标签：表示properties类型的数据结构，也是key value的 -->
+            <props>
+                <prop key="Java">Spring</prop>
+            </props>
+
+<!--            <map>-->
+<!--                <entry key="golang" value="gin"/>-->
+<!--            </map>-->
+        </property>
+    </bean>
+    <bean id="date" class="java.util.Date"></bean>
+
+</beans>

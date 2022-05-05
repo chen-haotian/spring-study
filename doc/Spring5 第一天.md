@@ -811,9 +811,257 @@ public class SpringTest {
 }
 ```
 
+**构造注入的方式需要注意的问题⚠️：1.如果经常变化的数据，并不适用于注入的方式 2.要满足构造的所有参数才能实例化bean对象**
+
 #### set方法注入
+
+创建HelloWorld类
+
+```java
+public class HelloWorld {
+
+    private String name;
+    private Integer age;
+    private Date date;
+
+    /** 复杂的数据类型 */
+    private String[] stringArray;
+
+    private List<String> stringList;
+
+    private Map<String, String> stringMap;
+
+    private Set<String> stringSet;
+
+    private Properties properties;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public void setStringArray(String[] stringArray) {
+        this.stringArray = stringArray;
+    }
+
+    public void setStringList(List<String> stringList) {
+        this.stringList = stringList;
+    }
+
+    public void setStringMap(Map<String, String> stringMap) {
+        this.stringMap = stringMap;
+    }
+
+    public void setStringSet(Set<String> stringSet) {
+        this.stringSet = stringSet;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+    public void printInfo() {
+        System.out.println("name=" + name + ", age=" + age + ", date=" + date);
+        System.out.println("array=" + Arrays.toString(stringArray));
+        System.out.println("list=" + stringList.toString());
+        System.out.println("map=" + stringMap.toString());
+        System.out.println("set=" + stringSet.toString());
+        System.out.println("properties=" + properties.toString());
+    }
+}
+```
+
+创建spring的配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 依赖注入方式一：构造注入 -->
+    <bean id="helloWorld" class="com.matrix.study.demo2.hello.HelloWorld">
+        <!--
+        constructor-arg标签：用于构造注入参数
+            index属性：指定参数在构造函数参数列表的索引位置
+            type属性：指定参数在构造函数中的数据类型
+            name属性：指定参数在构造函数中的名称
+        =======上面三个都是找给谁赋值，下面两个指的是赋什么值的==============
+            value属性：它能赋的值是基本数据类型和 String 类型
+            ref属性：它能赋的值是其他 bean 类型，也就是说，必须得是在配置文件中配置过的 bean
+        -->
+        <property name="name" value="Matrix"/>
+        <property name="age" value="23"/>
+        <property name="date" ref="date"/>
+
+        <!-- 数组类型-->
+        <property name="stringArray">
+            <!-- array标签：表示数组 -->
+            <array>
+                <value>A</value>
+                <value>B</value>
+                <value>C</value>
+            </array>
+        </property>
+        <!-- 集合类型 -->
+        <property name="stringList">
+            <!-- list标签：表示集合 -->
+            <list>
+                <value>D</value>
+                <value>E</value>
+                <value>F</value>
+            </list>
+        </property>
+
+        <!-- map类型 -->
+        <property name="stringMap">
+            <!-- map标签：表示map类型的数据结构kv -->
+            <map>
+                <entry key="Matrix" value="QiQi"/>
+            </map>
+
+<!--            <props>-->
+<!--                <prop key="matrix">qiqi</prop>-->
+<!--            </props>-->
+        </property>
+
+        <!-- set类型 -->
+        <property name="stringSet">
+            <!-- set标签：表示set类型的数据结构 -->
+            <set>
+                <value>G</value>
+                <value>G</value>
+                <value>P</value>
+            </set>
+        </property>
+
+        <property name="properties">
+            <!-- props标签：表示properties类型的数据结构，也是key value的 -->
+            <props>
+                <prop key="Java">Spring</prop>
+            </props>
+
+<!--            <map>-->
+<!--                <entry key="golang" value="gin"/>-->
+<!--            </map>-->
+        </property>
+    </bean>
+    <bean id="date" class="java.util.Date"></bean>
+
+</beans>
+```
+
+测试类
+
+```java
+public class SpringTest {
+    public static void main(String[] args) {
+        // 1.读取spring配置文件创建bean容器
+        ApplicationContext applicationContext = new ClassPathXmlApplicationContext("spring/demo2/spring-beans.xml");
+        // 2.根据bean的名称获取bean对象
+        HelloWorld helloWorld = (HelloWorld) applicationContext.getBean("helloWorld");
+        System.out.println(helloWorld);
+        helloWorld.printInfo();
+    }
+}
+```
 
 #### 使用注解的方式注入
 
+创建TestConfig类
 
+```java
+// 配置类用于扫描使用注解配置的bean
+@Configuration
+@ComponentScan(basePackages = "com.matrix.study.demo3")
+public class TestConfig {
+
+}
+```
+
+创建TestController类
+
+```java
+@Controller
+public class TestController {
+
+    @Autowired
+    private TestService testService;
+
+    public void info() {
+        testService.info();
+    }
+}
+```
+
+创建TestService类
+
+```java
+public interface TestService {
+
+    /**
+     * 测试方法
+     */
+    void info();
+}
+```
+
+创建TestServiceImpl类
+
+```java
+@Service
+public class TestServiceImpl implements TestService {
+
+    @Autowired
+    private TestDao testDao;
+
+    @Override
+    public void info() {
+        testDao.info();
+    }
+}
+```
+
+创建TestDao类
+
+```java
+public interface TestDao {
+
+    void info();
+}
+```
+
+创建TestDaoImpl类
+
+```java
+@Repository
+public class TestDaoImpl implements TestDao {
+    @Override
+    public void info() {
+        System.out.println("测试。。");
+    }
+}
+```
+
+测试类
+
+```java
+public class SpringTest {
+    public static void main(String[] args) {
+        // 1.读取spring配置文件创建bean容器
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(TestConfig.class);
+        // 2.根据bean的名称获取bean对象
+        TestController testController = (TestController) applicationContext.getBean("testController");
+        testController.info();
+    }
+}
+```
 

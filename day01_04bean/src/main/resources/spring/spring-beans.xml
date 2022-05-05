@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean的三种实例化方式 -->
+
+    <!-- 方式一：使用默认的构造函数实例化bean对象 -->
+    <!--
+    <bean id="helloWorld" class="com.matrix.study.hello.HelloWorld">
+        <property name="message" value="Hello World"/>
+    </bean> -->
+
+    <!-- 方式二：使用Spring管理的工厂实例，使用实例工厂的方法创建bean对象-->
+    <!-- 此种方式是:
+        先把工厂的创建交给 spring 来管理。
+        然后在使用工厂的 bean 来调用里面的方法
+        factory-bean 属性：用于指定实例工厂 bean 的 id。
+        factory-method 属性：用于指定实例工厂中创建对象的方法。
+    -->
+    <!--
+    <bean id="helloWorldFactory" class="com.matrix.study.factory.HelloWorldFactory">
+
+    </bean>
+    <bean id="helloWorld" factory-bean="helloWorldFactory" factory-method="getHelloWorld">
+        <property name="message" value="Factory get HelloWorld"/>
+    </bean>-->
+
+    <!-- 方式三：使用Spring管理的静态工厂实例，使用静态工厂的静态方法创建bean对象 -->
+    <!-- 此种方式是:
+        使用 StaticFactory 类中的静态方法 createAccountService 创建对象，并存入 spring 容器
+        id 属性：指定 bean 的 id，用于从容器中获取
+        class 属性：指定静态工厂的全限定类名
+        factory-method 属性：指定生产对象的静态方法
+    -->
+    <bean id="helloWorld" class="com.matrix.study.factory.HelloWorldStaticFactory" factory-method="getStaticHelloWorld">
+        <property name="message" value="StaticFactory get HelloWorld"/>
+    </bean>
+</beans>

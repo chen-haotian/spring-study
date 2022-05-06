@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 配置AccountService-->
+    <bean id="accountService" class="com.matrix.study.xml.service.impl.AccountServiceImpl">
+        <!-- set方式注入AccountDao-->
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+    <!-- 配置AccountDao-->
+    <bean id="accountDao" class="com.matrix.study.xml.dao.impl.AccountDaoImpl">
+        <property name="queryRunner" ref="queryRunner"/>
+    </bean>
+    <!-- 配置QueryRunner-->
+    <bean id="queryRunner" class="org.apache.commons.dbutils.QueryRunner">
+        <constructor-arg name="ds" ref="dataSource"/>
+    </bean>
+    <!-- 配置dataSource -->
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:13306/spring5_super?useSSL=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;autoReconnect=true"/>
+        <property name="username" value="root"/>
+        <property name="password" value="cjw123456"/>
+    </bean>
+
+</beans>

@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Scope;
  * @Description: TODO 配置Hikari数据源配置类
  * @Version: TODO
  */
-@PropertySource(value = "classpath:spring-anno/mysql.properties")
+@PropertySource(value = "classpath:spring-anno/db/mysql.properties")
 public class HikariDataSourceConfiguration {
 
     @Value("${jdbc.driver}")

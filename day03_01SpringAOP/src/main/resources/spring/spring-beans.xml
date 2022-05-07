@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!--配置spring的ioc，把service对象配置进来-->
+	<bean id="accountService" class="com.matrix.study.service.impl.AccountServiceImpl">
+
+	</bean>
+
+	<!--spring中基于XML的AOP配置步骤
+		1、把通知Bean也交给spring来管理
+
+	-->
+	<aop:config>
+
+	</aop:config>
+
+</beans>

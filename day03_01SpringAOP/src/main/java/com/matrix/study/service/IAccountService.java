@@ -8,8 +8,6 @@ package com.matrix.study.service;
  */
 public interface IAccountService {
 
-
-
     /**
      * 模拟保存账户
      */

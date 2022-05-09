@@ -1173,9 +1173,608 @@ AOP全称：Aspect Oriented Programming，翻译成中文就是面向切面编�
 
 ### 2.2 Spring关于代理的选择
 
-在 spring 中，框架会根据目标类是否实现了接口来决定采用哪种动态代理的方式。
+> 在 spring 中，框架会根据目标类是否实现了接口来决定采用哪种动态代理的方式。
 
 ### 2.3 基于XML的AOP配置
 
+#### AOP入门案例
+
+> 场景模拟介绍：在执行保持存在前，执行日志记录方法
+
+maven工程导入SpringAOP相关依赖
+
+```xml
+<!--spring-context-->
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-context</artifactId>
+  <version>5.3.19</version>
+</dependency>
+<!--用于解析切入点表达式-->
+<dependency>
+  <groupId>org.aspectj</groupId>
+  <artifactId>aspectjweaver</artifactId>
+  <version>1.9.9.1</version>
+</dependency>
+<!-- junit -->
+<dependency>
+  <groupId>junit</groupId>
+  <artifactId>junit</artifactId>
+  <version>4.13.2</version>
+  <scope>test</scope>
+</dependency>
+<!-- spring-test -->
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-test</artifactId>
+  <version>5.3.19</version>
+  <scope>test</scope>
+</dependency>
+```
+
+业务层接口
+
+```java
+public interface IAccountService {
+
+    /**
+     * 模拟保存账户
+     */
+    void saveAccount();
+
+    /**
+     * 模拟更新用户
+     * @param i
+     */
+    void updateAccount(int i);
+
+    /**
+     * 模拟删除账户
+     * @return
+     */
+    int deleteAccount();
+}
+```
+
+业务层接口实现类
+
+```java
+public class AccountServiceImpl implements IAccountService {
+
+    @Override
+    public void saveAccount() {
+        System.out.println("执行了保存操作");
+    }
+
+    @Override
+    public void updateAccount(int i) {
+        System.out.println("执行了更新操作" + i);
+    }
+
+    @Override
+    public int deleteAccount() {
+        System.out.println("执行了删除操作");
+        return 0;
+    }
+}
+```
+
+日志记录工具类
+
+```java
+public class Logger {
+
+    /**
+     * 用于打印日志，计划让其在切入点方法执行之前执行（切入点方法就是业务层方法）
+     */
+    public void printLog() {
+        System.out.println("Logger类的printLog方法开始记录日志!");
+    }
+}
+```
+
+Spring配置文件
+
+> Spring中基于XML的AOP配置步骤
+>
+> 1、把通知Bean也交给spring来管理
+>
+> 2、使用aop:config标签表明开始AOP配置
+>
+> 3、使用aop:aspect标签表明开始切面
+>
+> - id属性：是给切面提供一个唯一标识
+> - ref属性：是指定通知类bean的id
+>
+> 4、在aop:aspect标签内部使用对应标签来配置通知类型
+>
+> - aop:before标签：表示前置通知
+>   - method属性：表示哪个方法是前置通知。
+>   - pointcut属性：用于指定切入点表达式，该表达式的含义指的是对业务层中哪些方法增强。
+> - 切入点表达式的写法：
+>   - 关键字：execution(表达式)
+>   - 表达式写法：
+>     - 访问修饰符  返回值  包名称.包名称.包名称...类名称.方法名称(参数列表)
+>   - 标准的表达式写法：
+>     - public void com.matrix.study.service.impl.AccountServiceImpl.saveAccount()
+>   - 访问修饰符可以省略
+>     - void com.matrix.study.service.impl.AccountServiceImpl.saveAccount()
+>   - 返回值可以使用通配符表示
+>     - \* com.matrix.study.service.impl.AccountServiceImpl.saveAccount()
+>   - 包名称可以使用通配符，表示任意包。但是有几级包目录结构就要写几个 \*.
+>     - \* \*.\*.\*.\*.\*.AccountServiceImpl.saveAccount()
+>   - 包名称可以使用..表示当前包及其子包
+>     - \* \*..AccountServiceImpl.saveAccount()
+>   - 类名称和方法名称都可以使用*来实现通配
+>     - \* \*..\*()
+>   - 参数列表：
+>     - 可以直接写数据类型：
+>       - 基本类型直接写名称
+>       - 引用类型写全限定类名称 例如：java.lang.String
+>     - 可以使用通配符表示任意类型，但是必须有参数
+>     - 可以使用..表示有无参数均可，有参数可以是任意类型。
+>   - 切入点表达式全通配写法：\* \*..\*.\*(..)
+>   - 实际开发中切入点表达式的通常写法：
+>     - 切到业务层实现类下的所有方法
+>       - \* com.matrix.study.service.impl.\*.\*(..)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!--配置spring的ioc，把service对象配置进来-->
+	<bean id="accountService" class="com.matrix.study.service.impl.AccountServiceImpl">
+
+	</bean>
+
+	<!-- 配置logger类 -->
+	<bean id="logger" class="com.matrix.study.utils.Logger"></bean>
+
+	<aop:config>
+		<aop:aspect id="logAdvice" ref="logger">
+			<!-- 配置通知的类型，并且建立通知方法和切入点的方法关联 -->
+<!--			<aop:before method="printLog" pointcut="execution(public void com.matrix.study.service.impl.AccountServiceImpl.saveAccount())"></aop:before>-->
+<!--			<aop:before method="printLog" pointcut="execution(* *..*.*(..))"></aop:before>-->
+<!--			<aop:before method="printLog" pointcut="execution(* *..*.AccountServiceImpl.saveAccount())"></aop:before>-->
+			<aop:before method="printLog" pointcut="execution(* com.matrix.study.service.impl.*.*(..))"></aop:before>
+		</aop:aspect>
+	</aop:config>
+
+</beans>
+```
+
+测试类
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring/spring-beans.xml")
+public class SpringTest {
+
+    @Autowired
+    private IAccountService accountService;
+
+    @Test
+    public void test1() {
+        accountService.saveAccount();
+        accountService.updateAccount(1);
+        accountService.deleteAccount();
+    }
+}
+```
+
+#### AOP的通知类型
+
+> 通知类型如下
+>
+> 1、前置通知：在切入点方法执行之前执行
+>
+> 2、后置通知：在切入点方法正常执行之后执行，它和异常通知只能执行其中一个
+>
+> 3、异常通知：在切入点方法产生异常之后执行，它和后置通知只能执行其中一个
+>
+> 4、最终通知：无论切入点方法是否正常执行它都会在其后面执行
+
+业务层接口
+
+```java
+public interface IAccountService {
+
+    /**
+     * 模拟保存账户
+     */
+    void saveAccount();
+}
+```
+
+业务层接口实现类
+
+```java
+public class AccountServiceImpl implements IAccountService {
+
+    @Override
+    public void saveAccount() {
+        System.out.println("执行了保存操作");
+        // 模拟业务异常
+        int i = 10 / 0;
+    }
+}
+```
+
+模拟日志工具类
+
+```java
+public class Logger {
+
+    /**
+     * 前置通知
+     */
+    public void beforePrintLog() {
+        System.out.println("前置通知Logger类的beforePrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 后置通知
+     */
+    public void afterReturningPrintLog() {
+        System.out.println("后置通知Logger类的afterReturningPrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 异常通知
+     */
+    public void afterThrowingPrintLog() {
+        System.out.println("异常通知Logger类的afterThrowingPrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 最终通知
+     */
+    public void afterPrintLog() {
+        System.out.println("最终通知Logger类的afterPrintLog方法开始记录日志!");
+    }
+}
+```
+
+Spring配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!--配置spring的ioc，把service对象配置进来-->
+	<bean id="accountService" class="com.matrix.study.service.impl.AccountServiceImpl">
+
+	</bean>
+
+	<!-- 配置logger类 -->
+	<bean id="logger" class="com.matrix.study.utils.Logger"></bean>
+
+	<aop:config>
+		<aop:aspect id="logAdvice" ref="logger">
+			<!--前置通知：在切入点方法执行之前执行-->
+			<aop:before method="afterPrintLog" pointcut-ref="default"></aop:before>
+			<!--后置通知：在切入点方法正常执行之后执行，它和异常通知只能执行其中一个-->
+			<aop:after-returning method="afterReturningPrintLog" pointcut-ref="default"></aop:after-returning>
+			<!--异常通知：在切入点方法产生异常之后执行，它和后置通知只能执行其中一个-->
+			<aop:after-throwing method="afterThrowingPrintLog" pointcut-ref="default"></aop:after-throwing>
+			<!--最终通知：无论切入点方法是否正常执行它都会在其后面执行-->
+			<aop:after method="afterPrintLog" pointcut-ref="default"></aop:after>
+			<!--配置切入点表达式
+				id属性：用于指定表达式的唯一标识
+				expression属性：用于指定表达式内容
+			-->
+			<aop:pointcut id="default" expression="execution(* *..*.*(..))"/>
+		</aop:aspect>
+	</aop:config>
+
+</beans>
+
+```
+
+测试类
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring/spring-beans.xml")
+public class SpringTest {
+
+    @Autowired
+    private IAccountService accountService;
+
+    @Test
+    public void test1() {
+        accountService.saveAccount();
+    }
+}
+```
+
+#### AOP的环绕通知
+
+> 环绕通知：
+
+在Logger类中加入方法
+
+```java
+/**
+  * 环绕通知
+  */
+public void aroundPrintLog() {
+  	System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志!");
+}
+```
+
+然后修改Spring的配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!--配置spring的ioc，把service对象配置进来-->
+	<bean id="accountService" class="com.matrix.study.service.impl.AccountServiceImpl">
+
+	</bean>
+
+	<!-- 配置logger类 -->
+	<bean id="logger" class="com.matrix.study.utils.Logger"></bean>
+
+	<aop:config>
+		<aop:aspect id="logAdvice" ref="logger">
+			<!--环绕通知：-->
+			<aop:around method="aroundPrintLog" pointcut-ref="default"></aop:around>
+			<!--配置切入点表达式
+				id属性：用于指定表达式的唯一标识
+				expression属性：用于指定表达式内容
+			-->
+			<aop:pointcut id="default" expression="execution(* *..*.*(..))"/>
+		</aop:aspect>
+	</aop:config>
+
+</beans>
+```
+
+新增单元测试
+
+```java
+/**
+  * 环绕通知
+  */
+@Test
+public void test2() {
+  accountService.saveAccount();
+}
+```
+
+当执行单元测试的方法后，会发现切入点方法没有执行，而通知方法执行了。
+
+**分析问题**：通过对比动态代理的环绕通知代码，发现动态代理的环绕通知有明确的切入点方法调用，而我们的代码中没有。
+
+**解决办法**：Spring框架为我们提供了一个接口，*ProceedingJoinPoint*。该接口有一个方法*proceed()*，此方法就相当于明确调用切入点方法。该接口可以作为环绕通知的方法参数，在程序执行时，Spring框架会为我们提供该接口的实现类供我们使用。
+
+修改Logger类的aroundPrintLog方法
+
+```java
+public Object aroundPrintLog(ProceedingJoinPoint proceedingJoinPoint) {
+        Object rtValue = null;
+        try {
+            Object[] args = proceedingJoinPoint.getArgs(); // 得到方法执行时需要的参数
+
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志---->前置通知");
+
+            rtValue = proceedingJoinPoint.proceed(args); // 明确调用业务层方法（切入点的方法）
+
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志---->后置通知");
+
+            return rtValue;
+        } catch (Throwable e) {
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志---->异常通知");
+            throw new RuntimeException(e);
+        } finally {
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志---->最终通知");
+        }
+}
+```
+
+Spring中的环绕通知：它是Spring框架为我们提供的一种可以在代码中手动控制增强方法何时执行的方式。
+
 ### 2.4 基于注解的AOP配置
+
+> 注解的方式配置AOP（前置通知、后置通知、异常通知、最终通知）
+
+导入maven依赖
+
+```xml
+<!--spring-context-->
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-context</artifactId>
+  <version>5.3.19</version>
+</dependency>
+<!--用于解析切入点表达式-->
+<dependency>
+  <groupId>org.aspectj</groupId>
+  <artifactId>aspectjweaver</artifactId>
+  <version>1.9.9.1</version>
+</dependency>
+<!-- junit -->
+<dependency>
+  <groupId>junit</groupId>
+  <artifactId>junit</artifactId>
+  <version>4.13.2</version>
+  <scope>test</scope>
+</dependency>
+<!-- spring-test -->
+<dependency>
+  <groupId>org.springframework</groupId>
+  <artifactId>spring-test</artifactId>
+  <version>5.3.19</version>
+  <scope>test</scope>
+</dependency>
+```
+
+创建配置类
+
+```java
+// 配置类用于扫描配置bean的注解
+@Configuration
+@EnableAspectJAutoProxy // 开启AOP的支持
+@ComponentScan(basePackages = "com.matrix.study")
+public class ScanConfiguration {
+}
+```
+
+业务层接口
+
+```java
+public interface IAccountService {
+
+    /**
+     * 模拟保存账户
+     */
+    void saveAccount();
+
+    /**
+     * 模拟更新用户
+     * @param i
+     */
+    void updateAccount(int i);
+
+    /**
+     * 模拟删除账户
+     * @return
+     */
+    int deleteAccount();
+}
+```
+
+业务层接口实现类
+
+```java
+@Service(value = "accountService")
+public class AccountServiceImpl implements IAccountService {
+
+    @Override
+    public void saveAccount() {
+        System.out.println("执行了保存操作");
+        // 模拟业务异常
+        //int i = 10 / 0;
+    }
+
+    @Override
+    public void updateAccount(int i) {
+        System.out.println("执行了更新操作" + i);
+    }
+
+    @Override
+    public int deleteAccount() {
+        System.out.println("执行了删除操作");
+        return 0;
+    }
+}
+```
+
+Logger类
+
+```java
+@Component(value = "logger")
+@Aspect(value = "") // 表示当前类是一个切面
+public class Logger {
+
+    /**
+     * 设置切入点表达式
+     */
+    @Pointcut(value = "execution(* *..*.*(..))")
+    public void defaultPointcut() {
+
+    }
+
+    /**
+     * 前置通知
+     */
+    //@Before("defaultPointcut()")
+    public void beforePrintLog() {
+        System.out.println("前置通知Logger类的beforePrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 后置通知
+     */
+    //@AfterReturning("defaultPointcut()")
+    public void afterReturningPrintLog() {
+        System.out.println("后置通知Logger类的afterReturningPrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 异常通知
+     */
+    //@AfterThrowing("defaultPointcut()")
+    public void afterThrowingPrintLog() {
+        System.out.println("异常通知Logger类的afterThrowingPrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 最终通知
+     */
+    //@After("defaultPointcut()")
+    public void afterPrintLog() {
+        System.out.println("最终通知Logger类的afterPrintLog方法开始记录日志!");
+    }
+
+    /**
+     * 环绕通知
+     * @param proceedingJoinPoint 切入点方法调用接口
+     * @return
+     */
+    @Around("defaultPointcut()")
+    public Object aroundPrintLog(ProceedingJoinPoint proceedingJoinPoint) {
+        Object rtValue = null;
+        try {
+            Object[] args = proceedingJoinPoint.getArgs();
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志!。。。前置通知");
+            rtValue = proceedingJoinPoint.proceed(args);
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志!。。。后置通知");
+            return rtValue;
+        } catch (Throwable e) {
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志!。。。异常通知");
+            throw new RuntimeException(e);
+        } finally {
+            System.out.println("环绕通知Logger类的aroundPrintLog方法开始记录日志!。。。最终通知");
+        }
+    }
+}
+```
+
+测试类
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = ScanConfiguration.class)
+public class SpringTest {
+
+    @Autowired
+    private IAccountService accountService;
+
+    @Test
+    public void test1() {
+        accountService.saveAccount();
+    }
+}
+```
 

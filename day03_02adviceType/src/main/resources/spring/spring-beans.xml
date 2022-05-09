@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!--配置spring的ioc，把service对象配置进来-->
+	<bean id="accountService" class="com.matrix.study.service.impl.AccountServiceImpl">
+
+	</bean>
+
+	<!-- 配置logger类 -->
+	<bean id="logger" class="com.matrix.study.utils.Logger"></bean>
+
+	<aop:config>
+		<aop:aspect id="logAdvice" ref="logger">
+			<!--前置通知：在切入点方法执行之前执行
+			<aop:before method="afterPrintLog" pointcut-ref="default"></aop:before>-->
+			<!--后置通知：在切入点方法正常执行之后执行，它和异常通知只能执行其中一个
+			<aop:after-returning method="afterReturningPrintLog" pointcut-ref="default"></aop:after-returning>-->
+			<!--异常通知：在切入点方法产生异常之后执行，它和后置通知只能执行其中一个
+			<aop:after-throwing method="afterThrowingPrintLog" pointcut-ref="default"></aop:after-throwing>-->
+			<!--最终通知：无论切入点方法是否正常执行它都会在其后面执行
+			<aop:after method="afterPrintLog" pointcut-ref="default"></aop:after>-->
+			<!--环绕通知：-->
+			<aop:around method="aroundPrintLog" pointcut-ref="default"></aop:around>
+			<!--配置切入点表达式
+				id属性：用于指定表达式的唯一标识
+				expression属性：用于指定表达式内容
+			-->
+			<aop:pointcut id="default" expression="execution(* *..*.*(..))"/>
+		</aop:aspect>
+	</aop:config>
+
+</beans>

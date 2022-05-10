@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!-- 配置AccountService-->
+    <bean id="accountService" class="com.matrix.study.service.impl.AccountServiceImpl">
+        <!-- set方式注入AccountDao-->
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+
+    <!-- 配置AccountDao-->
+    <bean id="accountDao" class="com.matrix.study.dao.impl.AccountDaoImpl">
+        <!-- set方式注入QueryRunner-->
+        <property name="queryRunner" ref="queryRunner"/>
+        <!-- set方式注入ConnectionUtil -->
+        <property name="connectionUtil" ref="connectionUtil"/>
+    </bean>
+
+    <!-- 配置QueryRunner-->
+    <bean id="queryRunner" class="org.apache.commons.dbutils.QueryRunner">
+
+    </bean>
+
+    <!-- 配置ConnectionUtil -->
+    <bean id="connectionUtil" class="com.matrix.study.utils.ConnectionUtil">
+        <!-- set方式注入HikariDataSource -->
+        <property name="hikariDataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 配置dataSource -->
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:13306/spring5_super?useSSL=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;serverTimezone=Asia/Shanghai&amp;autoReconnect=true"/>
+        <property name="username" value="root"/>
+        <property name="password" value="cjw123456"/>
+    </bean>
+
+    <!-- 配置TransactionManagementUtil -->
+    <bean id="transactionManagerUtil" class="com.matrix.study.utils.TransactionManagerUtil">
+        <!-- set方式注入ConnectionUtil -->
+        <property name="connectionUtil" ref="connectionUtil"/>
+    </bean>
+
+    <!-- 配置BeanFactory -->
+<!--    <bean id="beanFactory" class="com.matrix.study.factory.BeanFactory">-->
+<!--        <property name="accountService" ref="accountService"/>-->
+<!--        <property name="transactionManagerUtil" ref="transactionManagerUtil"/>-->
+<!--    </bean>-->
+
+    <!--配置代理的accountService-->
+<!--    <bean id="proxyAccountService" factory-bean="beanFactory" factory-method="getAccountService">-->
+
+<!--    </bean>-->
+
+    <!--配置AOP-->
+    <aop:config>
+        <!--切入点表达式-->
+        <aop:pointcut id="default" expression="execution(* com.matrix.study.service.impl.*.*(..))"/>
+        <!--配置切面-->
+        <aop:aspect id="txAspect" ref="transactionManagerUtil">
+            <!--配置前置通知：开启事务-->
+            <aop:before method="beginTransaction" pointcut-ref="default"/>
+            <!--配置后置通知：提交事务-->
+            <aop:after-returning method="commit" pointcut-ref="default"/>
+            <!--配置异常通知：回滚事务-->
+            <aop:after-throwing method="rollback" pointcut-ref="default"/>
+            <!--配置最终通知：释放连接-->
+            <aop:after method="release" pointcut-ref="default"/>
+        </aop:aspect>
+    </aop:config>
+
+</beans>

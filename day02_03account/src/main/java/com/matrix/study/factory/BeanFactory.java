@@ -33,8 +33,6 @@ public class BeanFactory {
      */
     public IAccountService getAccountService() {
         IAccountService proxyIAccountService = (IAccountService) Proxy.newProxyInstance(accountService.getClass().getClassLoader(), accountService.getClass().getInterfaces(), new InvocationHandler() {
-
-
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 Object rtValue = null;
@@ -56,10 +54,6 @@ public class BeanFactory {
                 }
                 return rtValue;
             }
-
-
-
-
         });
         return proxyIAccountService;
     }

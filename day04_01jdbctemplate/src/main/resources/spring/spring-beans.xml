@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 配置accountDao -->
+<!--    <bean id="accountDao" class="com.matrix.study.dao.impl.AccountDaoImpl">-->
+<!--        <property name="jdbcTemplate" ref="jdbcTemplate"></property>-->
+<!--    </bean>-->
+
+    <bean id="accountDao2" class="com.matrix.study.dao.impl.AccountDaoImpl2">
+        <property name="jdbcTemplate" ref="jdbcTemplate"></property>
+    </bean>
+
+    <!--配置JdbcTemplate-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+
+    <!-- 加载properties文件内容
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:database/mysql.properties"/>
+    </bean>-->
+
+    <!--加载properties文件-->
+    <context:property-placeholder location="classpath:database/mysql.properties"/>
+
+    <!--配置数据源-->
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+</beans>

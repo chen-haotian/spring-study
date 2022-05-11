@@ -2,7 +2,7 @@
 
 ## 第一章 Spring5 概述
 
-### 1.1 Spring是什么？
+### 1.1 Spring 是什么？
 
 其实Spring是**Spring Projects项目**的其中的一个项目，名称为**spring-framework**。
 
